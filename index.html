@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Directorio Médico - Centro Profesional La Floresta</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- Reset y Estilos Globales --- */
+        :root {
+            --background: #f8f9fa;
+            --card-background: rgba(255, 255, 255, 0.75);
+            --text-primary: #1d1d1f;
+            --text-secondary: #5a5a5e;
+            --accent-color: #0071e3;
+            --accent-color-light: #e6f1fc;
+            --border-color: rgba(255, 255, 255, 0.9);
+            --shadow-color: rgba(0, 0, 0, 0.06);
+            --success-color: #34c759;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--background);
+            color: var(--text-primary);
+            margin: 0;
+            padding: clamp(20px, 5vw, 50px);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at 15% 50%, #dbeafe 0%, transparent 40%),
+                              radial-gradient(circle at 85% 30%, #bde0fe 0%, transparent 40%),
+                              radial-gradient(circle at 50% 90%, #a2d2ff 0%, transparent 50%);
+        }
+        
+        /* --- Contenedor Principal --- */
+        .container { max-width: 1200px; margin: auto; }
+
+        /* --- Cabecera --- */
+        .header { text-align: center; margin-bottom: 40px; }
+        .logo {
+            max-width: 300px;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            font-size: clamp(2.5rem, 6vw, 3.5rem);
+            font-weight: 700;
+            margin: 0;
+            background: linear-gradient(90deg, #1d1d1f, #000);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+        }
+
+        /* --- Controles de Búsqueda y Filtro --- */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 40px;
+            padding: 15px;
+            background: var(--card-background);
+            border-radius: 18px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px var(--shadow-color);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            position: sticky;
+            top: 20px;
+            z-index: 10;
+        }
+
+        .search-input, .specialty-select, .action-btn {
+            flex-grow: 1;
+            min-width: 180px;
+            padding: 14px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            background-color: rgba(230, 230, 230, 0.5);
+            transition: all 0.3s ease;
+            color: var(--text-primary);
+            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.05);
+        }
+        .search-input::placeholder { color: var(--text-secondary); }
+        .search-input:focus, .specialty-select:focus {
+            outline: none;
+            box-shadow: inset 0 0 0 1px var(--accent-color), 0 0 0 3px rgba(0, 113, 227, 0.15);
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+        .action-btn {
+            background-color: var(--accent-color-light);
+            color: var(--accent-color);
+            font-weight: 500;
+            cursor: pointer;
+            text-align: center;
+        }
+        .action-btn:hover { background-color: var(--accent-color); color: white; }
+
+        /* --- Directorio de Médicos (Grid) --- */
+        #directory-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 30px;
+        }
+
+        /* --- Tarjeta de Médico --- */
+        .doctor-card {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+            background: var(--card-background);
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            padding: 20px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeIn 0.5s ease forwards;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        .doctor-photo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            background-color: var(--accent-color-light);
+            background-size: cover;
+            background-position: center;
+            border: 2px solid white;
+        }
+
+        .doctor-info h3 { margin: 0 0 5px 0; font-size: 1.2rem; font-weight: 700; }
+        .doctor-info p { margin: 0; font-size: 0.9rem; color: var(--text-secondary); }
+        
+        .doctor-card::before {
+            content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+            background: radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(0, 113, 227, 0.1), transparent 40%);
+            opacity: 0; transition: opacity 0.5s; z-index: 0;
+        }
+        .doctor-card:hover::before { opacity: 1; }
+        .doctor-card:hover { transform: translateY(-8px) scale(1.02); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); }
+        @keyframes fadeIn { to { opacity: 1; transform: translateY(0); } }
+        
+        .not-found {
+            grid-column: 1 / -1; text-align: center; padding: 50px; font-size: 1.2rem;
+            color: var(--text-secondary); background: var(--card-background); border-radius: 20px;
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        }
+        
+        /* --- Estilos del Modal --- */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            display: flex; justify-content: center; align-items: center; z-index: 1000;
+            opacity: 0; visibility: hidden; transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: #fff; padding: 30px 40px; border-radius: 24px; max-width: 600px;
+            width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.2);
+            transform: scale(0.95); transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-content { transform: scale(1); }
+        .modal-header { display: flex; gap: 20px; align-items: center; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px solid #eee; }
+        .modal-photo { width: 100px; height: 100px; border-radius: 50%; flex-shrink: 0; background-size: cover; background-position: center; }
+        .modal-header h2 { margin: 0; font-size: clamp(1.5rem, 4vw, 2rem); }
+        .modal-header span { display: block; color: var(--text-secondary); font-size: 1.1rem; }
+        .close-modal {
+            background: #f0f0f0; border: none; border-radius: 50%; width: 40px; height: 40px;
+            cursor: pointer; font-size: 24px; line-height: 40px; transition: background-color 0.2s, transform 0.2s;
+            margin-left: auto; align-self: flex-start; flex-shrink: 0;
+        }
+        .close-modal:hover { background-color: #e0e0e0; transform: rotate(90deg); }
+        .modal-body .info-item { display: flex; align-items: flex-start; margin: 15px 0; }
+        .modal-body .info-item strong { width: 150px; flex-shrink: 0; }
+        #mapModal .modal-content { padding: 0; }
+        #mapModal .modal-header { padding: 20px 30px; margin-bottom: 0;}
+        #mapModal iframe { width: 100%; height: 450px; border: none; border-radius: 0 0 24px 24px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header class="header">
+            <img src="logo.png" alt="Logo del Centro Profesional La Floresta" class="logo">
+            <h1>Directorio Médico</h1>
+        </header>
+
+        <div class="controls">
+            <input type="text" id="searchInput" class="search-input" placeholder="Buscar por nombre o especialidad...">
+            <select id="specialtyFilter" class="specialty-select">
+                <option value="">Todas las especialidades</option>
+            </select>
+            <select id="floorFilter" class="specialty-select">
+                <option value="">Todos los pisos</option>
+            </select>
+            <button id="mapButton" class="action-btn">Ver Mapa</button>
+            <button id="resetButton" class="action-btn">Mostrar Todos</button>
+        </div>
+
+        <div id="directory-grid"></div>
+    </div>
+    
+    <div class="modal-overlay" id="doctorModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div id="modalDoctorPhoto" class="modal-photo"></div>
+                <div>
+                    <h2 id="modalDoctorName"></h2>
+                    <span id="modalDoctorSpecialty"></span>
+                </div>
+                <button class="close-modal" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body" id="modalDoctorBody"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="mapModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h2>Nuestra Ubicación</h2>
+                    <span>Centro Profesional La Floresta</span>
+                </div>
+                <button class="close-modal" id="closeMapModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3925.335391307613!2d-67.58782962409717!3d10.274358867375685!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x8e803c7336563381%3A0x66f19283a5c16353!2sCentro%20Profesional%20La%20Floresta!5e0!3m2!1ses!2sve!4v1728800201292!5m2!1ses!2sve" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const getFloor = (office) => {
+            if (!office || office.trim() === "") return null;
+            if (office.toLowerCase().includes('planta baja')) return 'PB';
+            const floorNum = office.split('-')[0].trim();
+            return !isNaN(floorNum) && floorNum !== "" ? floorNum : null;
+        };
+        
+        const fullDoctorsList = [
+            { "id": 1, "name": "Dra. Graca Rodrigues", "specialty": "Alergólogo", "office": "2-09/2-10", "phone": "0414-5986716" },
+            { "id": 2, "name": "Dra. Ana Cecilia Sánchez", "specialty": "Cardiólogo Infantil", "office": "3-04/1A", "phone": "0414-4622027" },
+            { "id": 3, "name": "Centro de Rehabilitación Integral La Floresta, C.A.", "specialty": "Centro de Rehabilitación", "office": "3-02/8B", "phone": "0424-3193679" },
+            { "id": 4, "name": "Dra. Tatiana Viloria", "specialty": "Cirugía Bucal, Maxilofacial. Endodoncia", "office": "1-16/6B", "phone": "0424-3598954" },
+            { "id": 5, "name": "Dr. Juan Francisco del Castillo", "specialty": "Cirugía General", "office": "1-13", "phone": "Actualmente no Disponible" },
+            { "id": 6, "name": "Dra. Yenire Camacho", "specialty": "Cirugía General Cirugía Oncológica", "office": "1-11 4A", "phone": "0414-3923663" },
+            { "id": 7, "name": "Dra. Julie Vásquez", "specialty": "Cirugía General Laparoscopia", "office": "1-03/1A", "phone": "0414-4523498" },
+            { "id": 8, "name": "Dra. Mary Carmen Ruiz", "specialty": "Cirugía General y Laparoscopia Avanzada, Ginecología Regenerativa y Estética", "office": "1-14", "phone": "0414-4291888" },
+            { "id": 9, "name": "Dr. Freddy Leal", "specialty": "Cirugía Laparoscópica e Histeroscopia", "office": "2-15 6A", "phone": "Actualmente no Disponible" },
+            { "id": 10, "name": "Dra. Ellen Botero", "specialty": "Cirugía Ortopédica Cirujano de Pie y Tobillo", "office": "3-12/4B", "phone": "0424-3455049" },
+            { "id": 11, "name": "Dr. Douglas Olmos Márquez", "specialty": "Cirugía Ortopédica Traumatología", "office": "1-11/4A", "phone": "0424-3019685" },
+            { "id": 12, "name": "Dr. Douglas Olmos Vásquez", "specialty": "Cirugía Ortopédica Traumatología", "office": "1-11/4A", "phone": "0424-3604378" },
+            { "id": 13, "name": "Dra. Emanuela Agnello Palumbo", "specialty": "Cirugía Ortopédica Traumatología/Cirujano de Pie y Tobillo", "office": "3-12/4B", "phone": "0414-9456660" },
+            { "id": 14, "name": "Dr. Luis Silva", "specialty": "Cirugía Plástica Reconstructiva y Maxilofacial", "office": "1-11/4A", "phone": "0412-9098117" },
+            { "id": 15, "name": "Dra. Nexllys Torres", "specialty": "Cirujano", "office": "2-16B", "phone": "0424-3353958" },
+            { "id": 16, "name": "Dra. Lizeth Malpica Vozza", "specialty": "Cirujano Coloproctólogo y Cirugía General y Laparoscopia", "office": "1-03/1A", "phone": "0414-4523498" },
+            { "id": 17, "name": "Dr. José Cardozo", "specialty": "Cirujano del Tórax", "office": "1-08/3B", "phone": "0412-8941414" },
+            { "id": 18, "name": "Dra. Bianca Gagliano", "specialty": "Cirujano General Laparoscopia", "office": "3-04/1A", "phone": "N/A" },
+            { "id": 19, "name": "Dr. José Luis González Mezzalira", "specialty": "Cirujano General Laparoscopista", "office": "2-13 5A", "phone": "0424-3377529" },
+            { "id": 20, "name": "Dra. Catheryne Sosa", "specialty": "Cirujano General Laparoscopista", "office": "2-13 5A", "phone": "0414-5110894" },
+            { "id": 21, "name": "Dra. María Beatriz Prieto", "specialty": "Cirujano General Urólogo", "office": "3-06/2B", "phone": "0424-3466432" },
+            { "id": 22, "name": "Dr. José Gregorio López", "specialty": "Cirujano General y Cirujano Oncólogo-Mastólogo", "office": "1-02/8B", "phone": "0414-4431471" },
+            { "id": 23, "name": "Dr. Jonathan Rodríguez", "specialty": "Cirujano Oncólogo", "office": "2-13 5A", "phone": "0414-9140560" },
+            { "id": 24, "name": "Dr. Gustavo Torres", "specialty": "Cirujano Oncólogo, Cirujano General", "office": "3-16 6B", "phone": "0414-4789284" },
+            { "id": 25, "name": "Dr. Freddy Piñero", "specialty": "Cirujano Oncólogoo", "office": "1-01/8A", "phone": "0243-2420744" },
+            { "id": 26, "name": "Dr. Fedor Marín", "specialty": "Cirujano Ortopédico Oncólogo", "office": "3-04/1A", "phone": "0414-4777160" },
+            { "id": 27, "name": "Dr. Omar Tovar", "specialty": "Cirujano Ortopédico Traumatólogo", "office": "3-04/1A", "phone": "0424-3380543" },
+            { "id": 28, "name": "Dr. Renato Davila", "specialty": "Cirujano Plástico", "office": "2-09/2-10", "phone": "0414-3459177" },
+            { "id": 29, "name": "Dr. Yoneira Perdomo", "specialty": "Cirujano Plástico", "office": "2-09/2-10", "phone": "0414-5986716" },
+            { "id": 30, "name": "Dr. Jorge Ceballos", "specialty": "Cirujano Plástico y Reconstructivo", "office": "2-04/1B", "phone": "0414-3693253" },
+            { "id": 31, "name": "Dr. Alexis Aular", "specialty": "Cirujano/Urólogo", "office": "3-05/2A", "phone": "0414-3447633" },
+            { "id": 32, "name": "Dra. Audira Orta", "specialty": "Dermatólogo", "office": "3-15 6A", "phone": "0412-4420593" },
+            { "id": 33, "name": "Odontosmile, C.A.", "specialty": "Estética y Prostodoncia Periodoncia", "office": "1-16/6B", "phone": "0424-3598954" },
+            { "id": 34, "name": "Lic. Alejandra Nieves", "specialty": "Fisioterapeuta", "office": "3-02/8B", "phone": "0424-3193679" },
+            { "id": 35, "name": "Dra. Jiroska Moran Fernández", "specialty": "Gastroenteróloga", "office": "2-13 5A", "phone": "0412-9400468" },
+            { "id": 36, "name": "Dra. Ana Osiris Benítez", "specialty": "Ginecobstetra", "office": "1-03/1A", "phone": "0414-5992276" },
+            { "id": 37, "name": "Dra. Yasmina Ramos", "specialty": "Ginecobstetra", "office": "1-04/1B", "phone": "0412-3795328" },
+            { "id": 38, "name": "Dra. Martha Burgos de Guedez", "specialty": "Ginecobstetra", "office": "1-05 2A", "phone": "0424-3597832" },
+            { "id": 39, "name": "Dra. Dulce Guía", "specialty": "Ginecobstetra", "office": "1-05/2A", "phone": "0412-7321020, 0412-1796987" },
+            { "id": 40, "name": "Dra. Tatiana Camaioni", "specialty": "Ginecobstetra", "office": "1-06/2B", "phone": "Actualmente no Disponible" },
+            { "id": 41, "name": "Dr. Francesco Paolo Lauriano", "specialty": "Ginecobstetra", "office": "1-06/2B", "phone": "Actualmente no Disponible" },
+            { "id": 42, "name": "Dra. Rena Rincon", "specialty": "Ginecobstetra", "office": "1-07/3A", "phone": "Actualmente no Disponible" },
+            { "id": 43, "name": "Dr. Rodolfo Viloria", "specialty": "Ginecobstetra", "office": "1-14/5B", "phone": "024-3297163" },
+            { "id": 44, "name": "Dr. Rodolfo Viloria", "specialty": "Ginecobstetra", "office": "1-15/6A", "phone": "024-3297163" },
+            { "id": 45, "name": "Dra. Norma Parra", "specialty": "Ginecobstetra", "office": "1-15/6A", "phone": "0412-3561442" },
+            { "id": 46, "name": "Dra. Lucero Bello", "specialty": "Ginecobstetra", "office": "2-05/2A", "phone": "Actualmente no Disponible" },
+            { "id": 47, "name": "Dra. María Magdalena Martinez", "specialty": "Ginecobstetra", "office": "2-07/3A", "phone": "Actualmente no Disponible" },
+            { "id": 48, "name": "Dr. Orangel Muñoz", "specialty": "Ginecobstetra", "office": "2-07/3A", "phone": "0424-5965005, 0424-3651952" },
+            { "id": 49, "name": "Dr. Victor Finol", "specialty": "Ginecobstetra", "office": "2-08/3B", "phone": "Actualmente no Disponible" },
+            { "id": 50, "name": "Dra. Carlen Gimon", "specialty": "Ginecobstetra", "office": "2-09/2-10", "phone": "0426-5314300" },
+            { "id": 51, "name": "Dra. Yelimar Pacheco", "specialty": "Ginecobstetra", "office": "2-11/4A", "phone": "0412-8718610" },
+            { "id": 52, "name": "Dra. Mariannys Goncalves", "specialty": "Ginecobstetra", "office": "2-14 4B", "phone": "0414-5873740" },
+            { "id": 53, "name": "Dr. José M. Goncalves", "specialty": "Ginecobstetra", "office": "2-14 4B", "phone": "0416-6404502" },
+            { "id": 54, "name": "Dra. Evelyn Davis", "specialty": "Ginecobstetra", "office": "2-15 6A", "phone": "Actualmente no Disponible" },
+            { "id": 55, "name": "Dr. Gustavo Briceño", "specialty": "Ginecobstetra", "office": "3-01/8A", "phone": "0424-3111033" },
+            { "id": 56, "name": "Dra. Silvia Marcano", "specialty": "Ginecobstetra", "office": "3-01/8A", "phone": "0412-4638658" },
+            { "id": 57, "name": "Dra. Scarlet Canache", "specialty": "Ginecobstetra", "office": "3-07/3A", "phone": "0424-3473074" },
+            { "id": 58, "name": "Dra. Griselda Farias", "specialty": "Ginecobstetra", "office": "3-10/7B", "phone": "0424-4340515" },
+            { "id": 59, "name": "Dra. Jaibeth Duran", "specialty": "Ginecobstetra", "office": "3-13 5A", "phone": "0424-3158994" },
+            { "id": 60, "name": "Dr. Manuel León", "specialty": "Ginecobstetra - Ultrasonido Especializado Embriofetal", "office": "2-03/1A", "phone": "0414-3453634" },
+            { "id": 61, "name": "Dra. Belkis Flores", "specialty": "Ginecobstetra, Ecografía Láser Ginecológico", "office": "3-16 6B", "phone": "0414-4789284" },
+            { "id": 62, "name": "Dra. Norka Robles", "specialty": "Ginecobstetra, Ecografía, Medicina Tradicional China, Acupuntura", "office": "2-06/2B", "phone": "0243-2440257" },
+            { "id": 63, "name": "Dra. Jenny Cortez", "specialty": "Ginecobstetra, Especialista en Ginecología Estética Funcional y Regenerativa", "office": "2-02/8A", "phone": "0424-3766901" },
+            { "id": 64, "name": "Dra. Juleine Guevara", "specialty": "Ginecobstetra, Fertilidad", "office": "2-12/4B", "phone": "0424-3561619, 0416-6437408" },
+            { "id": 65, "name": "Dr. Freddy D. Guedez", "specialty": "Ginecobstetra, Fertilidad, Histeroscopia", "office": "1-05 2A", "phone": "0424-3697940" },
+            { "id": 66, "name": "Dr. Benito Maiellano", "specialty": "Ginecobstetra, Ginecología Estética", "office": "3-01/8A", "phone": "0424-4638658" },
+            { "id": 67, "name": "Dra. Yolanda Salomon", "specialty": "Ginecobstetra, Ginecología Regenerativa Funcional y Estética, Sexólogo", "office": "2-05/2A", "phone": "0414-4760143" },
+            { "id": 68, "name": "Dr. Luis Duarte", "specialty": "Ginecobstetra, Sexólogo, Gineco-Estético, Ecografista Integral", "office": "2-08/3B", "phone": "0424-3579482" },
+            { "id": 69, "name": "Dra. Yaniska Garcia", "specialty": "Ginecología Obstetricia, Gineco-Estético", "office": "2-15 6A", "phone": "0424-3687454" },
+            { "id": 70, "name": "Dr. Victor Diaz", "specialty": "Ginecólogo-Obstetra", "office": "3-13/5A", "phone": "0412-4113561" },
+            { "id": 71, "name": "Dra. Sonny Domínguez", "specialty": "Hematólogo", "office": "3-05/2A", "phone": "0412-0230611" },
+            { "id": 72, "name": "Laboratorio Clínico Flor Lab, C.A.", "specialty": "Laboratorio Clínico", "office": "1-09/7A", "phone": "0243-2202217, Whatsapp: 0424-3524393" },
+            { "id": 73, "name": "Laboratorio Clínico Flor Lab, C.A.", "specialty": "Laboratorio Clínico", "office": "3-09 7A", "phone": "0243-2418431" },
+            { "id": 74, "name": "Dr. Jaikel Bajanchi", "specialty": "Mastólogo Cirugía General-Cirujano Oncólogo", "office": "1-08/3B", "phone": "0412-8530228" },
+            { "id": 75, "name": "Dra. Barbara García", "specialty": "Medicina del Dolor y Cuidados Paliativos", "office": "1-13", "phone": "0414-3440352" },
+            { "id": 76, "name": "Dra. Lorena Hernández", "specialty": "Medicina Estética", "office": "3-13 5A", "phone": "N/A" },
+            { "id": 77, "name": "Dra. Rosiris Velásquez", "specialty": "Medicina Interna, Valoración Cardiovascular Pre-Operatoria", "office": "3-01/8A", "phone": "0424-3801545" },
+            { "id": 78, "name": "Dra. Mauralida Márquez", "specialty": "Medicina Tradicional China Acupuntura", "office": "2-06/2B", "phone": "0416-7407033" },
+            { "id": 79, "name": "Dra. Alezka Escobar", "specialty": "Médico Fisiatra", "office": "3-02/8B", "phone": "0412-5519849" },
+            { "id": 80, "name": "Dra. Angie Oliveros", "specialty": "Médico Fisiatra", "office": "3-02/8B", "phone": "0414-4544352" },
+            { "id": 81, "name": "Dra. Marielys Montero", "specialty": "Médico Fisiatra", "office": "3-02/8B", "phone": "0424-3193679" },
+            { "id": 82, "name": "Dr. Marco Molina", "specialty": "Médico Internista", "office": "1-03/1A", "phone": "0424-3621575" },
+            { "id": 83, "name": "Dr. Rafael Niño", "specialty": "Médico Internista Oncólogo", "office": "1-07/3A", "phone": "Actualmente no Disponible" },
+            { "id": 84, "name": "Dra. Claudia Niño", "specialty": "Médico Obesólogo y Medicina Estética", "office": "2-04/1B", "phone": "0414-5908444" },
+            { "id": 85, "name": "Ing. Luis Marcano", "specialty": "N/A", "office": "3-03/1A", "phone": "Actualmente no Disponible" },
+            { "id": 86, "name": "Celulas Madre", "specialty": "N/A", "office": "Planta Baja", "phone": "0414-4599502" },
+            { "id": 87, "name": "Dr. José Luis Castellano", "specialty": "Cirujano Pediatra", "office": "2-09/2-10", "phone": "0414-3428482" },
+            { "id": 88, "name": "Dr. Iván Rivas", "specialty": "Neurocirujano", "office": "3-04/1A", "phone": "0424-3340507" },
+            { "id": 89, "name": "Dr. Luis De Stefano", "specialty": "Obstetra-Ginecólogo, Embriofetólogo, Ecosonogramas Maternos Fetales, Determinación de Madurez Pulmonar Fetal", "office": "2-01/9A", "phone": "0243-2428525" },
+            { "id": 90, "name": "Dr. Luzardo A. Canache C.", "specialty": "Obstetricia - Ginecología", "office": "3-07/3A", "phone": "0412-4438305" },
+            { "id": 91, "name": "Dr. Camilo Betancourt", "specialty": "Odontólogo", "office": "3-06/2B", "phone": "Actualmente no Disponible" },
+            { "id": 92, "name": "Dra. Tatiana Viloria", "specialty": "Odontosmile, C.A.", "office": "1-16/6B", "phone": "0424-3598954" },
+            { "id": 93, "name": "Dr. Miguel Riera", "specialty": "Cirujano Pediatra", "office": "2-09/2-10", "phone": "0412-8840837, 0412-0388604" },
+            { "id": 94, "name": "Dr. Arturo Morales Díaz", "specialty": "Ortopedia, Traumatología Infantil, Patología del Pie", "office": "3-14 5B", "phone": "0412-4438373" },
+            { "id": 95, "name": "Dra. Mayerling Bitriaga", "specialty": "Otorrinolaringóloga", "office": "1-02/8B", "phone": "0414-4431471" },
+            { "id": 96, "name": "Dra. Estefanía Lopez", "specialty": "Otorrinolaringólogo", "office": "1-07/3A", "phone": "Actualmente no Disponible" },
+            { "id": 97, "name": "Dra. Leonor Peña", "specialty": "Otorrinolaringólogo", "office": "1-07/3A", "phone": "0424-3583731" },
+            { "id": 98, "name": "Dr. Javier González", "specialty": "Otorrinolaringólogo", "office": "1-15/6A", "phone": "0414-4567818" },
+            { "id": 99, "name": "Dra. Mariela Valdiviezo", "specialty": "Otorrinolaringólogo", "office": "3-15 6B", "phone": "0424-3167282" },
+            { "id": 100, "name": "Dra. Laura Real de Piñero", "specialty": "Patólogo", "office": "1-01/8A", "phone": "0243-2420744" },
+            { "id": 101, "name": "Dr. Abraham Betancourt", "specialty": "Pediatra", "office": "1-010/7B", "phone": "Actualmente no Disponible" },
+            { "id": 102, "name": "Dr. Alejandro Crespo", "specialty": "Pediatra", "office": "1-01/8A", "phone": "0243-2420744" },
+            { "id": 103, "name": "Dr. Wilfredo Lopez", "specialty": "Pediatra", "office": "2-09/2-10", "phone": "0412-8840837, 0414-3464690" },
+            { "id": 104, "name": "Dra. Elijuce Benítez", "specialty": "Pediatra", "office": "2-09/2-10", "phone": "0424-3048388" },
+            { "id": 105, "name": "Dra. Elizabeth Hernández", "specialty": "Pediatra", "office": "2-11/4A", "phone": "0414-4549738" },
+            { "id": 106, "name": "Dra. Iremy Herrera", "specialty": "Pediatra", "office": "2-09/2-10", "phone": "0414-3351158" },
+            { "id": 107, "name": "Dra. Katherin Hernández", "specialty": "Pediatra", "office": "2-09/2-10", "phone": "0424-3707300" },
+            { "id": 108, "name": "Dra. Raizabeth Moreno", "specialty": "Pediatra", "office": "1-01/8A", "phone": "0243-2420744" },
+            { "id": 109, "name": "Dra. Ana Vásquez", "specialty": "Pediatra - Consejera - Promotora Lactancia Materna", "office": "1-15/6A", "phone": "0412-4439179" },
+            { "id": 110, "name": "Dra. Osvir Pérez", "specialty": "Pediatra Cardiólogo Infantil", "office": "1-11 4A", "phone": "N/A" },
+            { "id": 111, "name": "Dr. José Lugo Perales", "specialty": "Pediatra Neonatólogo", "office": "2-09/2-10", "phone": "0414-4549738" },
+            { "id": 112, "name": "Dra. Jandume Morr", "specialty": "Pediatra Neonatólogo", "office": "3-11/4A", "phone": "Actualmente no Disponible" },
+            { "id": 113, "name": "Dra. Lisdrelys Hernández", "specialty": "Pediatra Neonatólogo", "office": "1-10/7B", "phone": "0414-4916271" },
+            { "id": 114, "name": "Dra. María Campos", "specialty": "Pediatra Neonatólogo", "office": "1-10/7B", "phone": "0424-3578784" },
+            { "id": 115, "name": "Dr. Feder Alvarez", "specialty": "Pediatra Puericultor", "office": "3-11/4A", "phone": "0424-3705828, 0424-3690085" },
+            { "id": 116, "name": "Dr. Rambert Alayon B.", "specialty": "Pediatra Puericultor", "office": "3-11/4A", "phone": "0412-8666322" },
+            { "id": 117, "name": "Dra. Jennie Martens", "specialty": "Pediatra Puericultor", "office": "3-15 6B", "phone": "0414-4461107" },
+            { "id": 118, "name": "Dra. Noris Rengifo", "specialty": "Pediatra Puericultor", "office": "2-02/8A", "phone": "Actualmente no Disponible" },
+            { "id": 119, "name": "Dra. Myriam Raquel González", "specialty": "Pediatra, Dermatólogo Pediatra", "office": "3-13 5A", "phone": "+34 617627039" },
+            { "id": 120, "name": "Dra. Yeisy Castro", "specialty": "Neumopediatra", "office": "1-08/3B", "phone": "0412-8565151" },
+            { "id": 121, "name": "Odontosmile, C.A.", "specialty": "Ortodoncia-Odontopediatría", "office": "1-16/6B", "phone": "0424-3598954" },
+            { "id": 122, "name": "Lic. Clara Márquez", "specialty": "Protseg C.A. Unidad de Medicina Ocupacional Bionalista", "office": "1-11/4A", "phone": "0412-7029217" },
+            { "id": 123, "name": "Lic. Valeria Yagmour", "specialty": "Psicología", "office": "2-09/2-10", "phone": "0424-3313037" },
+            { "id": 124, "name": "Lcda. Yorgely Hernández", "specialty": "Psicólogo Clínico", "office": "2-16 6B", "phone": "0414-4466019" },
+            { "id": 125, "name": "Dr. José Piñero Real", "specialty": "Psiquiatra", "office": "1-01/8A", "phone": "0243-2420744" },
+            { "id": 126, "name": "T.S.U. José Cardozo", "specialty": "T.S.U. Enfermería Espirometría Terapia Respiratoria", "office": "1-08/3B", "phone": "0424-3649159" },
+            { "id": 127, "name": "Lic. Katiuska Parra", "specialty": "Terapeuta Ocupacional", "office": "3-02/8B", "phone": "0412-0390016" },
+            { "id": 128, "name": "Dr. Francisco Lozada", "specialty": "Traumatología Ortopedia", "office": "2-12/4B", "phone": "0424-3560046" },
+            { "id": 129, "name": "Dr. Roberto Lazzarotto", "specialty": "Traumatología Ortopedia", "office": "3-10/7B", "phone": "0424-3125501" },
+            { "id": 130, "name": "Dr. Jhoan Martínez", "specialty": "Traumatólogo", "office": "2-07/3A", "phone": "0424-5965005" },
+            { "id": 131, "name": "Dr. Armando Reveron", "specialty": "Traumatólogo Ortopedista", "office": "3-04/1A", "phone": "0414-3583990" },
+            { "id": 132, "name": "Dra. María José Navarro", "specialty": "Traumatólogo Ortopedista", "office": "3-12/4B", "phone": "0424-5801764" },
+            { "id": 133, "name": "Dra. Geraldine Battaglini", "specialty": "Unidad Anti-Obesidad, Médico Obesólogo", "office": "2-16 6B", "phone": "0414-1780154" },
+            { "id": 134, "name": "Dr. Eduardo Carmona", "specialty": "Urólogo", "office": "2-09/2-10", "phone": "0414-2309650" },
+            { "id": 135, "name": "Dr. jose luis martinez", "specialty": "VARICES , CIRUJANO GENERAL FLEBOLOGIA", "office": "3-08 3B", "phone": "4124621411" },
+            { "id": 136, "name": "Dr. Victor Diaz", "specialty": "Ginecólogo-Obstetra", "office": "Planta Baja", "phone": "4129436321" }
+        ].map(doc => ({
+            ...doc,
+            schedule: "Previa Cita",
+            bio: "Profesional con experiencia en su área. Contacte para más detalles.",
+            insurance: ["Consultar"],
+            languages: ["Español"],
+            photoUrl: `https://placehold.co/100x100/E6F1FC/0071E3?text=${doc.name.match(/\b(\w)/g) ? doc.name.match(/\b(\w)/g).join('') : 'MD'}`,
+            floor: getFloor(doc.office)
+        }));
+
+
+        const grid = document.getElementById('directory-grid');
+        const searchInput = document.getElementById('searchInput');
+        const specialtyFilter = document.getElementById('specialtyFilter');
+        const floorFilter = document.getElementById('floorFilter');
+        const resetButton = document.getElementById('resetButton');
+        const mapButton = document.getElementById('mapButton');
+        const modal = document.getElementById('doctorModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const mapModal = document.getElementById('mapModal');
+        const closeMapModalBtn = document.getElementById('closeMapModalBtn');
+
+
+        const displayDoctors = (doctors) => {
+            grid.innerHTML = '';
+            if (doctors.length === 0) {
+                grid.innerHTML = '<p class="not-found">No se encontraron resultados.</p>';
+                return;
+            }
+            doctors.forEach((doctor, index) => {
+                const card = document.createElement('div');
+                card.className = 'doctor-card';
+                card.style.animationDelay = `${index * 50}ms`;
+                card.dataset.doctorId = doctor.id;
+                card.innerHTML = `
+                    <div class="doctor-photo" style="background-image: url('${doctor.photoUrl}')"></div>
+                    <div class="doctor-info">
+                        <h3>${doctor.name}</h3>
+                        <p>${doctor.specialty || 'No especificada'}</p>
+                        <p>Consultorio: ${doctor.office || 'N/A'}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        };
+
+        const populateFilters = () => {
+            const specialties = [...new Set(fullDoctorsList.map(doc => doc.specialty).filter(Boolean))].sort();
+            const floors = [...new Set(fullDoctorsList.map(doc => doc.floor).filter(Boolean))].sort((a, b) => {
+                if (a === 'PB') return -1;
+                if (b === 'PB') return 1;
+                return a - b;
+            });
+
+            specialties.forEach(s => specialtyFilter.innerHTML += `<option value="${s}">${s}</option>`);
+            floors.forEach(f => floorFilter.innerHTML += `<option value="${f}">${f === 'PB' ? 'Planta Baja' : `Piso ${f}`}</option>`);
+        };
+
+        const filterAndSearch = () => {
+            const searchTerm = searchInput.value.toLowerCase();
+            const selectedSpecialty = specialtyFilter.value;
+            const selectedFloor = floorFilter.value;
+
+            const filteredDoctors = fullDoctorsList.filter(doctor => {
+                const textSearchMatch = doctor.name.toLowerCase().includes(searchTerm) || (doctor.specialty && doctor.specialty.toLowerCase().includes(searchTerm));
+                const specialtyMatch = !selectedSpecialty || doctor.specialty === selectedSpecialty;
+                const floorMatch = !selectedFloor || doctor.floor == selectedFloor;
+                return textSearchMatch && specialtyMatch && floorMatch;
+            });
+            displayDoctors(filteredDoctors);
+        };
+        
+        const resetFilters = () => {
+            searchInput.value = '';
+            specialtyFilter.selectedIndex = 0;
+            floorFilter.selectedIndex = 0;
+            filterAndSearch();
+        };
+
+        const openModal = (doctorId) => {
+            const doctor = fullDoctorsList.find(d => d.id === parseInt(doctorId));
+            if (!doctor) return;
+
+            document.getElementById('modalDoctorName').textContent = doctor.name;
+            document.getElementById('modalDoctorSpecialty').textContent = doctor.specialty;
+            document.getElementById('modalDoctorPhoto').style.backgroundImage = `url('${doctor.photoUrl}')`;
+            
+            document.getElementById('modalDoctorBody').innerHTML = `
+                <div class="info-item"><strong>Biografía:</strong> <span>${doctor.bio}</span></div>
+                <div class="info-item"><strong>Horario:</strong> <span>${doctor.schedule}</span></div>
+                <div class="info-item"><strong>Consultorio:</strong> <span>${doctor.office}</span></div>
+                <div class="info-item"><strong>Teléfono:</strong> <span>${doctor.phone}</span></div>
+                <div class="info-item"><strong>Seguros:</strong> <span>${doctor.insurance.join(', ')}</span></div>
+                <div class="info-item"><strong>Idiomas:</strong> <span>${doctor.languages.join(', ')}</span></div>
+            `;
+            modal.classList.add('active');
+        };
+
+        const closeModal = () => modal.classList.remove('active');
+        
+        // --- Event Listeners ---
+        searchInput.addEventListener('input', filterAndSearch);
+        specialtyFilter.addEventListener('change', filterAndSearch);
+        floorFilter.addEventListener('change', filterAndSearch);
+        resetButton.addEventListener('click', resetFilters);
+        
+        grid.addEventListener('click', (e) => {
+            const card = e.target.closest('.doctor-card');
+            if (card) openModal(card.dataset.doctorId);
+        });
+
+        // --- Doctor Modal Listeners ---
+        closeModalBtn.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+        
+        // --- Map Modal Listeners ---
+        mapButton.addEventListener('click', () => mapModal.classList.add('active'));
+        closeMapModalBtn.addEventListener('click', () => mapModal.classList.remove('active'));
+        mapModal.addEventListener('click', (e) => { if (e.target === mapModal) mapModal.classList.remove('active'); });
+
+        // --- Hover effect ---
+        document.getElementById('directory-grid').addEventListener('mousemove', e => {
+            const card = e.target.closest('.doctor-card');
+            if(card) {
+                const rect = card.getBoundingClientRect();
+                card.style.setProperty('--mouse-x', `${e.clientX - rect.left}px`);
+                card.style.setProperty('--mouse-y', `${e.clientY - rect.top}px`);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            populateFilters();
+            displayDoctors(fullDoctorsList);
+        });
+    </script>
+</body>
+</html>
+
