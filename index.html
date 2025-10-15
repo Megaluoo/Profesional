@@ -192,11 +192,14 @@
             color: var(--accent-color);
         }
         .service-card .service-logo {
-            height: 60px;
-            width: auto;
-            max-width: 120px;
+            height: 70px; /* Aumentamos el tamaño */
+            width: 70px;  /* Aumentamos el tamaño */
             margin-bottom: 15px;
             object-fit: contain;
+            border-radius: 50%; /* Hacemos el contenedor circular */
+            background: #fff;  /* Añadimos un fondo blanco sólido */
+            padding: 8px;       /* Damos un pequeño espacio interior */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* Sombra sutil para darle profundidad */
         }
         body.dark-mode .service-card[data-search="Odontosmile"] .service-logo {
             filter: invert(1);
