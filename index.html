@@ -65,7 +65,15 @@
 
         /* --- Cabecera --- */
         .header { text-align: center; margin-bottom: 40px; }
-        .logo { width: 100%; max-width: 400px; height: auto; margin-bottom: 10px; }
+        .logo { 
+            width: 100%; 
+            max-width: 400px; 
+            height: auto; 
+            margin-bottom: 10px; 
+            /* FIX: Centrar el logo horizontalmente en todos los casos */
+            margin-left: auto;
+            margin-right: auto;
+        }
         .header h1 {
             font-size: clamp(2.5rem, 6vw, 3.5rem); font-weight: 700; margin: 0;
             background: linear-gradient(90deg, var(--text-primary), var(--text-secondary));
@@ -201,9 +209,8 @@
             padding: 8px;       /* Damos un pequeño espacio interior */
             box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* Sombra sutil para darle profundidad */
         }
-        body.dark-mode .service-card[data-search="Odontosmile"] .service-logo {
-            filter: invert(1);
-        }
+        /* FIX: Eliminada la regla de 'filter: invert(1)' para mantener la consistencia */
+        
 
         .service-card h3 {
             margin: 0 0 5px 0;
@@ -841,6 +848,12 @@
     </script>
 </body>
 </html>
+
+
+
+
+
+
 
 
 
