@@ -72,7 +72,12 @@
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             background-clip: text; color: transparent;
         }
-        body.dark-mode .logo { filter: invert(0.1); }
+        
+        /* --- Lógica para cambiar el logo en modo oscuro --- */
+        .logo-dark { display: none; } /* Oculta el logo oscuro por defecto */
+        body.dark-mode .logo-light { display: none; } /* Oculta el logo claro en modo oscuro */
+        body.dark-mode .logo-dark { display: block; } /* Muestra el logo oscuro en modo oscuro */
+
 
         /* --- Controles de Búsqueda y Filtro --- */
         .controls {
@@ -119,6 +124,7 @@
             padding: 10px;
             background: var(--card-background);
             border-radius: 14px;
+            flex-wrap: wrap; /* Permite que los botones se ajusten en pantallas pequeñas */
         }
         .floor-btn {
             border: none;
@@ -281,13 +287,33 @@
         .whatsapp-btn { background-color: var(--whatsapp-color); color: white; font-weight: 500; }
         .whatsapp-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); filter: brightness(1.1); }
         .info-item a.whatsapp-btn { color: white; }
+
+        /* --- Responsive Adjustments for Modal Buttons --- */
+        @media (max-width: 480px) {
+            .btn-text {
+                display: none;
+            }
+            .modal-action-btn, .whatsapp-btn {
+                padding: 10px;
+                min-width: 44px; /* Ensure a good tap target size */
+                justify-content: center;
+            }
+            .whatsapp-btn {
+                gap: 0;
+            }
+            .action-buttons {
+                gap: 8px; /* Reduce gap between buttons */
+            }
+        }
     </style>
 </head>
 <body>
 
     <div class="container">
         <header class="header">
-            <img src="logo.png" alt="Logo del Centro Profesional La Floresta" class="logo">
+            <!-- Se usan dos logos, y CSS controla cuál se muestra -->
+            <img src="logo.png" alt="Logo del Centro Profesional La Floresta" class="logo logo-light">
+            <img src="logo-blanco.png" alt="Logo del Centro Profesional La Floresta" class="logo logo-dark">
             <h1>Directorio Médico</h1>
         </header>
 
@@ -296,8 +322,8 @@
             <select id="specialtyFilter" class="specialty-select"> <option value="">Todas las especialidades</option> </select>
             <button id="resetButton" class="action-btn">Mostrar Todos</button>
             <button id="darkModeToggle" class="action-btn" aria-label="Cambiar tema">
-                <svg class="sun icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-                <svg class="moon icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                <svg class="sun icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                <svg class="moon icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
             </button>
         </div>
         
@@ -464,22 +490,10 @@
         const copyToClipboard = (text, button) => {
             navigator.clipboard.writeText(text).then(() => {
                 const originalText = button.innerHTML;
-                button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> Copiado!`;
+                button.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> <span class="btn-text">Copiado!</span>`;
                 setTimeout(() => { button.innerHTML = originalText; }, 2000);
             }).catch(err => {
                 console.error('Error al copiar:', err);
-                try {
-                    const textArea = document.createElement('textarea');
-                    textArea.value = text;
-                    document.body.appendChild(textArea);
-                    textArea.focus();
-                    textArea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    const originalText = button.innerHTML;
-                    button.innerHTML = `Copiado!`;
-                     setTimeout(() => { button.innerHTML = originalText; }, 2000);
-                } catch (e) { console.error('Fallback de copia fallido:', e); }
             });
         };
 
@@ -505,11 +519,11 @@
                             <a href="tel:${cleanNumber}">${number}</a>
                             <div class="action-buttons">
                                 <button class="modal-action-btn" onclick="copyToClipboard('${number}', this)">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> Copiar
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> <span class="btn-text">Copiar</span>
                                 </button>
                                 ${whatsappLink ? `<a href="${whatsappLink}" target="_blank" class="whatsapp-btn">
                                     <svg fill="white" width="16" height="16" viewBox="0 0 24 24" role="img" xmlns="http://www.w3.org/2000/svg"><title>WhatsApp icon</title><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12.04 21.54c-1.849 0-3.56-.56-5.003-1.545L2.51 21.493l1.58-4.332a9.14 9.14 0 0 1-1.545-5.003C2.547 6.175 6.83 2 12.04 2c5.207 0 9.49 4.175 9.49 9.368 0 5.192-4.283 9.37-9.49 9.372zM21.525 2.475A11.45 11.45 0 0 0 12.04 0C5.46 0 .01 5.448.01 12.034c0 2.14.56 4.16 1.598 5.925L0 24l6.21-1.622a11.413 11.413 0 0 0 5.83 1.593h.001c6.583 0 11.995-5.45 11.995-12.034a11.495 11.495 0 0 0-3.51-8.46z"/></svg>
-                                    WhatsApp
+                                    <span class="btn-text">WhatsApp</span>
                                 </a>` : ''}
                             </div>
                         </div>`;
@@ -587,6 +601,9 @@
     </script>
 </body>
 </html>
+
+
+
 
 
 
