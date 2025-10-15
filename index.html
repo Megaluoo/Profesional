@@ -70,7 +70,6 @@
             max-width: 400px; 
             height: auto; 
             margin-bottom: 10px; 
-            /* FIX: Centrar el logo horizontalmente en todos los casos */
             margin-left: auto;
             margin-right: auto;
         }
@@ -133,7 +132,7 @@
             padding: 10px;
             background: var(--card-background);
             border-radius: 14px;
-            flex-wrap: wrap; /* Permite que los botones se ajusten en pantallas pequeñas */
+            flex-wrap: wrap; 
             opacity: 0;
             animation: slideDownFadeIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.2s forwards;
         }
@@ -200,17 +199,15 @@
             color: var(--accent-color);
         }
         .service-card .service-logo {
-            height: 70px; /* Aumentamos el tamaño */
-            width: 70px;  /* Aumentamos el tamaño */
+            height: 70px; 
+            width: 70px;  
             margin-bottom: 15px;
             object-fit: contain;
-            border-radius: 50%; /* Hacemos el contenedor circular */
-            background: #fff;  /* Añadimos un fondo blanco sólido */
-            padding: 8px;       /* Damos un pequeño espacio interior */
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08); /* Sombra sutil para darle profundidad */
-        }
-        /* FIX: Eliminada la regla de 'filter: invert(1)' para mantener la consistencia */
-        
+            border-radius: 50%; 
+            background: #fff;  
+            padding: 8px;       
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+        }        
 
         .service-card h3 {
             margin: 0 0 5px 0;
@@ -473,22 +470,22 @@
         <div class="other-services">
             <h2>Otros Servicios del Centro</h2>
             <div class="services-grid">
-                <div class="service-card" data-search="Flor Lab">
+                <div class="service-card" data-doctor-id="72">
                     <img src="laboratorio.png" alt="Logo Laboratorio Flor Lab" class="service-logo">
                     <h3>Laboratorio Clínico</h3>
                     <p>Pisos 1 y 3</p>
                 </div>
-                <div class="service-card" data-search="Centro de Rehabilitación">
+                <div class="service-card" data-doctor-id="3">
                      <img src="rehabilitacion.png" alt="Logo Centro de Rehabilitación" class="service-logo">
                     <h3>Rehabilitación</h3>
                     <p>Piso 3</p>
                 </div>
-                <div class="service-card" data-search="Odontosmile">
+                <div class="service-card" data-doctor-id="92">
                     <img src="orthodontics.png" alt="Logo Odontosmile" class="service-logo">
                     <h3>Unidad Odontológica</h3>
                     <p>Piso 1</p>
                 </div>
-                 <div class="service-card" data-search="Protseg">
+                 <div class="service-card" data-doctor-id="122">
                     <div class="icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg></div>
                     <h3>Medicina Ocupacional</h3>
                     <p>Piso 1</p>
@@ -577,6 +574,14 @@
             let currentSpecialty = null;
 
             sortedDoctors.forEach((doctor, index) => {
+                // Si hay un término de búsqueda, no ocultamos nada
+                if (!searchTerm) {
+                    const serviceNamesToHide = ["laboratorio clínico flor lab, c.a.", "centro de rehabilitación integral la floresta, c.a.", "odontosmile, c.a.", "protseg c.a. unidad de medicina ocupacional"];
+                    if (serviceNamesToHide.includes(doctor.name.toLowerCase())) {
+                        return;
+                    }
+                }
+
                 if(doctor.specialty !== currentSpecialty) {
                     currentSpecialty = doctor.specialty;
                     const header = document.createElement('h2');
@@ -672,13 +677,17 @@
             floorFilterContainer.querySelectorAll('.floor-btn').forEach(btn => btn.classList.remove('active'));
             floorFilterContainer.querySelector('.floor-btn[data-floor=""]').classList.add('active');
             
-            // On reset, display all doctors except the main service entries
+            displayInitialList();
+        };
+        
+        const displayInitialList = () => {
             const initialList = fullDoctorsList.filter(doctor => {
                 const serviceNamesToHide = ["laboratorio clínico flor lab, c.a.", "centro de rehabilitación integral la floresta, c.a.", "odontosmile, c.a.", "protseg c.a. unidad de medicina ocupacional"];
                 return !serviceNamesToHide.includes(doctor.name.toLowerCase());
             });
             displayDoctors(initialList);
         };
+
 
         // --- LÓGICA DEL MODAL ---
         const copyToClipboard = (text, button) => {
@@ -808,23 +817,18 @@
             populateFilters();
             displaySkeletons(12);
 
-            // Make service cards clickable
+            // Make service cards clickable to open modal
             document.querySelectorAll('.service-card').forEach(card => {
                 card.addEventListener('click', () => {
-                    const searchTerm = card.dataset.search;
-                    searchInput.value = searchTerm;
-                    filterAndSearch();
-                    window.scrollTo({ top: searchInput.offsetTop - 20, behavior: 'smooth' });
+                    const doctorId = card.dataset.doctorId;
+                    if (doctorId) {
+                        openModal(doctorId);
+                    }
                 });
             });
 
             setTimeout(() => {
-                // On initial load, display all doctors except the main service entries
-                const initialList = fullDoctorsList.filter(doctor => {
-                    const serviceNamesToHide = ["laboratorio clínico flor lab, c.a.", "centro de rehabilitación integral la floresta, c.a.", "odontosmile, c.a.", "protseg c.a. unidad de medicina ocupacional"];
-                    return !serviceNamesToHide.includes(doctor.name.toLowerCase());
-                });
-                displayDoctors(initialList);
+                displayInitialList();
             }, 600);
         });
 
@@ -848,11 +852,6 @@
     </script>
 </body>
 </html>
-
-
-
-
-
 
 
 
