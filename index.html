@@ -753,10 +753,15 @@
             if (phoneNumbers.length > 0 && !isInvalidPhone(doctor.phone)) {
                 phoneNumbers.forEach(number => {
                     const cleanNumber = number.replace(/[^0-9]/g, '');
-                    const whatsappLink = cleanNumber.length >= 10 ? `https://wa.me/58${cleanNumber.slice(-10)}` : '';
+                    
+                    // FIX: Lógica mejorada para detectar números de celular
+                    const lastTenDigits = cleanNumber.slice(-10);
+                    const isMobile = ['412', '414', '416', '424', '426'].some(prefix => lastTenDigits.startsWith(prefix));
+                    const hasWhatsappLabel = number.toLowerCase().includes('whatsapp');
+                    const whatsappLink = isMobile || hasWhatsappLabel ? `https://wa.me/58${lastTenDigits}` : '';
 
                     phoneHTML += `<div class="phone-entry">
-                            <a href="tel:${cleanNumber}">${number}</a>
+                            <a href="tel:${cleanNumber}">${number.replace(/whatsapp:/gi, '').trim()}</a>
                             <div class="action-buttons">
                                 <button class="modal-action-btn" onclick="copyToClipboard('${number}', this)">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg> <span class="btn-text">Copiar</span>
@@ -852,6 +857,10 @@
     </script>
 </body>
 </html>
+
+
+
+
 
 
 
